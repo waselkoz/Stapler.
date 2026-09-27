@@ -38,17 +38,32 @@ export function useStapler() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<StaplerResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // New state for the interactive grilling phase
+  const [threadId, setThreadId] = useState<string>(`thread_${Math.random().toString(36).substring(7)}`);
+  const [grillMessage, setGrillMessage] = useState<string | null>(null);
 
-  const startAnalysis = async (idea: string) => {
+  const submitIdeaOrReply = async (input: string, isReply: boolean = false) => {
     setIsAnalyzing(true);
     setError(null);
-    setResult(null);
+    
+    // If it's a completely new idea, reset everything
+    if (!isReply) {
+      setResult(null);
+      setGrillMessage(null);
+      setThreadId(`thread_${Math.random().toString(36).substring(7)}`);
+      setInputIdea(input);
+    }
 
     try {
-      const response = await fetch("http://localhost:317/api/staple", {
+      const payload = isReply 
+        ? { input_idea: inputIdea, thread_id: threadId, user_reply: input }
+        : { input_idea: input, thread_id: threadId };
+
+      const response = await fetch("http://127.0.0.1:313/api/staple", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_idea: idea }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -56,7 +71,15 @@ export function useStapler() {
       }
 
       const data = await response.json();
-      setResult(data);
+      
+      if (data.status === "interrupted") {
+        // The AI is asking a follow up question / arguing
+        setGrillMessage(data.message);
+      } else {
+        // The AI is satisfied and completed the generation!
+        setGrillMessage(null);
+        setResult(data);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to run Stapler pipeline");
     } finally {
@@ -64,12 +87,17 @@ export function useStapler() {
     }
   };
 
+  // Keep startAnalysis for backwards compatibility in UI, but it now routes to the new function
+  const startAnalysis = (idea: string) => submitIdeaOrReply(idea, false);
+
   return {
     inputIdea,
     setInputIdea,
     isAnalyzing,
     result,
     error,
+    grillMessage,
+    submitIdeaOrReply,
     startAnalysis,
   };
 }

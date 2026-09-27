@@ -1145,48 +1145,75 @@ async def export_markdown(req: ExportRequest):
 
 class StapleRequest(BaseModel):
     input_idea: str
+    thread_id: str = "default"
+    user_reply: str | None = None
 
 @app.post("/api/staple")
 async def run_stapler(req: StapleRequest):
     from backend.stapler_graph import stapler_graph
     from backend.scraper import scrape_website
+    from langgraph.types import Command
     import base64
     
     input_idea = req.input_idea
     screenshot_b64 = None
+    config = {"configurable": {"thread_id": req.thread_id}}
     
-    if input_idea.startswith("http") or (" " not in input_idea and "." in input_idea):
-        url = "https://" + input_idea if not input_idea.startswith("http") else input_idea
+    if req.user_reply:
+        # Check if the thread actually exists in memory
+        current_state = stapler_graph.get_state(config)
+        if not current_state or not current_state.values:
+            # Thread was lost (e.g. server restarted). Start a fresh one but include the reply in the idea.
+            input_idea = f"{req.input_idea}\n\nUser Follow-up: {req.user_reply}"
+            req.user_reply = None # Fall through to the fresh start block
+        else:
+            try:
+                result = await asyncio.to_thread(stapler_graph.invoke, Command(resume=req.user_reply), config)
+            except Exception as e:
+                raise HTTPException(500, f"Graph execution failed: {e}")
+                
+    if not req.user_reply:
+        if input_idea.startswith("http") or (" " not in input_idea and "." in input_idea):
+            url = "https://" + input_idea if not input_idea.startswith("http") else input_idea
+            try:
+                scrape_res = await asyncio.wait_for(scrape_website(url), timeout=60)
+                shot_path = scrape_res.get("screenshot_path")
+                if shot_path and os.path.exists(shot_path):
+                    with open(shot_path, "rb") as f:
+                        screenshot_b64 = base64.b64encode(f.read()).decode()
+                if scrape_res.get("html"):
+                    core = _extract_core(scrape_res["html"])
+                    input_idea = f"URL: {url}\n\nContent Context:\n{core}"
+            except Exception as e:
+                print(f"Scrape failed for God Mode: {e}")
+                
+        # Run the graph initially
         try:
-            scrape_res = await asyncio.wait_for(scrape_website(url), timeout=60)
-            shot_path = scrape_res.get("screenshot_path")
-            if shot_path and os.path.exists(shot_path):
-                with open(shot_path, "rb") as f:
-                    screenshot_b64 = base64.b64encode(f.read()).decode()
-            if scrape_res.get("html"):
-                core = _extract_core(scrape_res["html"])
-                input_idea = f"URL: {url}\n\nContent Context:\n{core}"
+            result = await asyncio.to_thread(stapler_graph.invoke, {"input_idea": input_idea, "screenshot_b64": screenshot_b64, "iterations": 0}, config)
         except Exception as e:
-            print(f"Scrape failed for God Mode: {e}")
+            raise HTTPException(500, f"Graph execution failed: {e}")
             
-    # Run the graph
-    try:
-        result = await asyncio.to_thread(stapler_graph.invoke, {"input_idea": input_idea, "screenshot_b64": screenshot_b64, "iterations": 0})
-    except Exception as e:
-        raise HTTPException(500, f"Graph execution failed: {e}")
-        
-    # Check for error
-    if result.get("error"):
+    # Check if interrupted for human input
+    state = stapler_graph.get_state(config)
+    if state.next:
+        tasks = state.tasks
+        interrupt_msg = "Please provide more details."
+        if tasks and tasks[0].interrupts:
+            interrupt_msg = tasks[0].interrupts[0].value
+        return {"status": "interrupted", "message": interrupt_msg, "thread_id": req.thread_id}
+
+    # If error
+    if result and result.get("error"):
         raise HTTPException(500, result["error"])
         
-    # Generate TTS Skill for the first Ad Hook
+    # Final return (graph completed)
     from backend.skills import generate_tts_audio
     audio_b64 = None
-    if result.get("ad_creative") and result["ad_creative"].hooks:
+    if result and result.get("ad_creative") and result["ad_creative"].hooks:
         audio_b64 = generate_tts_audio(result["ad_creative"].hooks[0])
 
-    # Format according to Master JSON Contract
     return {
+        "status": "completed",
         "audit": result["audit"].model_dump() if result.get("audit") else {},
         "marketing_engine": result["marketing_engine"].model_dump() if result.get("marketing_engine") else {},
         "visual_identity": result["visual_identity"].model_dump() if result.get("visual_identity") else {},

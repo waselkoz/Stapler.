@@ -29,7 +29,7 @@ def get_client() -> httpx.Client:
 # ---------------------------------------------------------------------------
 PROVIDERS = {
     "ollama": {
-        "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+        "base_url": os.getenv("OLLAMA_BASE_URL", "http://global.prd.ga.run.brev.nvidia.com:44205/v1"),
         "env_var": "OLLAMA_API_KEYS",
         "extra_headers": {},
         "no_auth": True,
@@ -69,10 +69,10 @@ def get_key_manager(provider: str = "openrouter") -> APIKeyManager:
 
     km = APIKeyManager.from_env(env_var=cfg["env_var"], cooldown=_cooldown)
     if km.count == 0:
-        raise RuntimeError(
-            f"No API keys for {provider}! Set {cfg['env_var']} in .env"
-        )
-    print(f"[API-KEY-MGR] Loaded {km.count} {provider} keys", flush=True)
+        print(f"[API-KEY-MGR] WARNING: No API keys for {provider}! Set {cfg['env_var']} in .env", flush=True)
+        km = APIKeyManager([], cooldown_seconds=0) # Return empty manager
+    else:
+        print(f"[API-KEY-MGR] Loaded {km.count} {provider} keys", flush=True)
     _provider_managers[provider] = km
     return km
 
@@ -83,64 +83,56 @@ def get_key_manager(provider: str = "openrouter") -> APIKeyManager:
 # ---------------------------------------------------------------------------
 MODEL_MAP = {
     "strategist": {
+        # HEAVY TASK: Deep business analysis & branding
         "models": [
-            ("ollama", "phi4-mini"),
-            ("ollama", "llama3.2"),
+            ("ollama", "nemotron"),
             ("groq", "llama-3.3-70b-versatile"),
-            ("openrouter", "openai/gpt-4o-mini"),
             ("openrouter", "nvidia/nemotron-3-super-120b-a12b:free"),
-            ("openrouter", "google/gemma-4-31b-it:free"),
-            ("ollama", "qwen2.5-coder:7b"),
-        ],
-        "max_tokens": 4096,
-    },
-    "designer": {
-        "models": [
-            ("ollama", "qwen2.5-coder:7b"),
-            ("ollama", "phi4-mini"),
-            ("groq", "llama-3.3-70b-versatile"),
-            ("openrouter", "openai/gpt-4o-mini"),
-            ("openrouter", "nvidia/nemotron-3-super-120b-a12b:free"),
-            ("openrouter", "google/gemma-4-31b-it:free"),
-            ("ollama", "llama3.2"),
         ],
         "max_tokens": 4096,
     },
     "developer": {
+        # HEAVY TASK: Writing massive HTML/CSS code blocks
         "models": [
-            ("openrouter", "openai/gpt-4o-mini"),
+            ("ollama", "nemotron"),
             ("groq", "llama-3.3-70b-versatile"),
-            ("ollama", "qwen2.5-coder:7b"),
             ("openrouter", "openai/gpt-4o-mini"),
-            ("openrouter", "nvidia/nemotron-3-super-120b-a12b:free"),
-            ("openrouter", "google/gemma-4-31b-it:free"),
-            ("ollama", "llama3.2"),
         ],
         "max_tokens": 4096,
     },
-    "developer_fix": {
+    "designer": {
+        # LIGHTWEIGHT TASK: Extracting tokens, styling rules
         "models": [
-            ("openrouter",  "openai/gpt-4o-mini"),
-            ("groq",        "llama-3.3-70b-versatile"),
-            ("ollama",      "qwen2.5-coder:7b"),
-            ("ollama",      "phi4-mini"),
-            ("openrouter",  "openai/gpt-4o-mini"),
-            ("openrouter",  "nvidia/nemotron-3-super-120b-a12b:free"),
-            ("openrouter",  "google/gemma-4-31b-it:free"),
+            ("ollama", "my_custom_model"),
+            ("ollama", "llama3.2"),
+            ("openrouter", "google/gemma-4-31b-it:free"),
+        ],
+        "max_tokens": 4096,
+    },
+    "social_content": {
+        # LIGHTWEIGHT TASK: Fast, viral hook generation using our fine-tuned data!
+        "models": [
+            ("ollama", "my_custom_model"),
+            ("ollama", "llama3.2"),
+            ("openrouter", "openai/gpt-4o-mini"),
         ],
         "max_tokens": 4096,
     },
     "qa": {
+        # LIGHTWEIGHT TASK: Fast QA scoring
         "models": [
-            ("ollama",      "phi4-mini"),
-            ("ollama",      "qwen2.5-coder:7b"),
-            ("groq",        "llama-3.3-70b-versatile"),
-            ("openrouter",  "openai/gpt-4o-mini"),
-            ("ollama",      "llama3.2"),
-            ("openrouter",  "nvidia/nemotron-3-super-120b-a12b:free"),
-            ("openrouter",  "google/gemma-4-31b-it:free"),
+            ("ollama", "my_custom_model"),
+            ("ollama", "phi4-mini"),
+            ("openrouter", "openai/gpt-4o-mini"),
         ],
         "max_tokens": 2048,
+    },
+    "developer_fix": {
+        "models": [
+            ("ollama", "my_custom_model"),
+            ("groq", "llama-3.3-70b-versatile"),
+        ],
+        "max_tokens": 4096,
     },
 }
 
