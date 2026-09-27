@@ -1,0 +1,48 @@
+{
+  "id": "state_1785259673475",
+  "url": "https://www.m38dparfum.com",
+  "idea": "",
+  "domain": "",
+  "created_at": 1785259673.475871,
+  "updated_at": 1785260216.9069993,
+  "status": "started",
+  "current_step": "developer",
+  "branding": {
+    "done": true,
+    "colors": [],
+    "tone": "",
+    "fonts": [],
+    "personality": ""
+  },
+  "strategy": {
+    "done": true,
+    "summary": "## Business Overview\nM&D Parfum is a luxury perfume boutique that offers exclusive scents and artisan perfumes. The ideal customer seeks sophistication, exclusivity in fragrances, often purchases as gifts or personal indulgence for special occasions.\n\n---\n\n## SWOT Analysis\n\n| Strength | Weakness     | Opportunity  | Threat |\n|----------|--------------|---------------|--------|\n| Exclusive product offering (Artisan Perfumes)    | Limited visual content and engagement on the site   | Online luxury",
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": []
+  },
+  "design": {
+    "done": true,
+    "philosophy": "",
+    "color_system": {},
+    "typography": {}
+  },
+  "developer": {
+    "done": true,
+    "pages": [],
+    "code_length": 4924
+  },
+  "qa": {
+    "done": false,
+    "score": null,
+    "issues": [],
+    "approved": false
+  },
+  "tool_data": {
+    "colors_count": 0,
+    "ctas_count": 0,
+    "accessibility_score": null
+  },
+  "errors": [],
+  "timing": {}
+}

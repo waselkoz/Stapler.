@@ -1,0 +1,48 @@
+{
+  "id": "state_1785257919971",
+  "url": "https://www.m38dparfum.com",
+  "idea": "",
+  "domain": "",
+  "created_at": 1785257919.971819,
+  "updated_at": 1785258438.461208,
+  "status": "started",
+  "current_step": "developer",
+  "branding": {
+    "done": true,
+    "colors": [],
+    "tone": "",
+    "fonts": [],
+    "personality": ""
+  },
+  "strategy": {
+    "done": true,
+    "summary": "## Business Overview\n\nM&D Parfum specializes in creating luxurious experiences through unique, high-end fragrances. The ideal customer seeks an exclusive taste and a refined lifestyle that goes beyond just buying perfume - it's about enhancing their image of elegance.\n\n- **Ideal Customer**:\n  - Name: Sophia\n  - Age: 35\n  - Occupation: Fashion Designer & Social Media Influencer \n  - Income: High-income bracket \n  - Location: Urban cities like Paris, Milan or New York.\n  - Lifestyle markers: Activ",
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": []
+  },
+  "design": {
+    "done": true,
+    "philosophy": "",
+    "color_system": {},
+    "typography": {}
+  },
+  "developer": {
+    "done": true,
+    "pages": [],
+    "code_length": 9502
+  },
+  "qa": {
+    "done": false,
+    "score": null,
+    "issues": [],
+    "approved": false
+  },
+  "tool_data": {
+    "colors_count": 0,
+    "ctas_count": 0,
+    "accessibility_score": null
+  },
+  "errors": [],
+  "timing": {}
+}

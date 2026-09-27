@@ -1,0 +1,48 @@
+{
+  "id": "state_1785190301904",
+  "url": "https://jobsphere-lwkm.onrender.com",
+  "idea": "",
+  "domain": "",
+  "created_at": 1785190301.9041634,
+  "updated_at": 1785190463.832461,
+  "status": "started",
+  "current_step": "developer",
+  "branding": {
+    "done": true,
+    "colors": [],
+    "tone": "",
+    "fonts": [],
+    "personality": ""
+  },
+  "strategy": {
+    "done": true,
+    "summary": "## Business Overview\nJobSphere is not just a job listing platform; it embodies the aspiration for a fulfilling career that resonates with personal values and ambitions. It offers a sense of security and empowerment, helping individuals find their \u201cdream mission\u201d in a competitive landscape. The ideal customer is a driven professional, likely in their late 20s to 40s, who prioritizes transparency and trust in their job search. JobSphere positions itself in the market as a modern, innovative soluti",
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": []
+  },
+  "design": {
+    "done": true,
+    "philosophy": "",
+    "color_system": {},
+    "typography": {}
+  },
+  "developer": {
+    "done": true,
+    "pages": [],
+    "code_length": 17715
+  },
+  "qa": {
+    "done": false,
+    "score": null,
+    "issues": [],
+    "approved": false
+  },
+  "tool_data": {
+    "colors_count": 0,
+    "ctas_count": 0,
+    "accessibility_score": null
+  },
+  "errors": [],
+  "timing": {}
+}

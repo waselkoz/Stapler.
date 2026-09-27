@@ -1,0 +1,98 @@
+{
+	"/": [
+		"src/routes/+server.ts"
+	],
+	"/_tk/assets/[filename]": [
+		"src/routes/_tk/assets/[filename]/+server.ts"
+	],
+	"/_tk/assets/[project_id]/[filename]": [
+		"src/routes/_tk/assets/[project_id]/[filename]/+server.ts"
+	],
+	"/_tk/data/[project_id]/[collection]": [
+		"src/routes/_tk/data/[project_id]/[collection]/+server.ts"
+	],
+	"/_tk/data/[project_id]/[collection]/[id]": [
+		"src/routes/_tk/data/[project_id]/[collection]/[id]/+server.ts"
+	],
+	"/_tk/realtime/[project_id]": [
+		"src/routes/_tk/realtime/[project_id]/+server.ts"
+	],
+	"/api/agent/clear": [
+		"src/routes/api/agent/clear/+server.ts"
+	],
+	"/api/agent/test": [
+		"src/routes/api/agent/test/+server.ts"
+	],
+	"/api/auth/save-server-credentials": [
+		"src/routes/api/auth/save-server-credentials/+server.ts"
+	],
+	"/api/domains": [
+		"src/routes/api/domains/+server.ts"
+	],
+	"/api/migrate-build-fields": [
+		"src/routes/api/migrate-build-fields/+server.ts"
+	],
+	"/api/projects": [
+		"src/routes/api/projects/+server.ts"
+	],
+	"/api/projects/[id]/agent": [
+		"src/routes/api/projects/[id]/agent/+server.ts"
+	],
+	"/api/projects/[id]/build": [
+		"src/routes/api/projects/[id]/build/+server.ts"
+	],
+	"/api/projects/[id]/export": [
+		"src/routes/api/projects/[id]/export/+server.ts"
+	],
+	"/api/projects/[id]/templates": [
+		"src/routes/api/projects/[id]/templates/+server.ts"
+	],
+	"/api/proxy": [
+		"src/routes/api/proxy/+server.ts"
+	],
+	"/api/settings": [
+		"src/routes/api/settings/+server.ts"
+	],
+	"/api/settings/llm-status": [
+		"src/routes/api/settings/llm-status/+server.ts"
+	],
+	"/api/settings/validate-llm": [
+		"src/routes/api/settings/validate-llm/+server.ts"
+	],
+	"/api/setup": [
+		"src/routes/api/setup/+server.ts"
+	],
+	"/api/templates": [
+		"src/routes/api/templates/+server.ts"
+	],
+	"/api/templates/[id]": [
+		"src/routes/api/templates/[id]/+server.ts"
+	],
+	"/api/upgrade": [
+		"src/routes/api/upgrade/+server.ts"
+	],
+	"/login": [],
+	"/setup": [],
+	"/tinykit": [],
+	"/tinykit/new-kit": [],
+	"/tinykit/new": [
+		"src/routes/tinykit/new/+page.server.ts"
+	],
+	"/tinykit/preview/[id]": [
+		"src/routes/tinykit/preview/[id]/+server.ts"
+	],
+	"/tinykit/preview/[id]/[...path]": [
+		"src/routes/tinykit/preview/[id]/[...path]/+server.ts"
+	],
+	"/tinykit/settings": [],
+	"/tinykit/studio": [
+		"src/routes/tinykit/studio/+page.server.ts"
+	],
+	"/tinykit/upgrade": [],
+	"/tinykit/[id]": [
+		"src/routes/tinykit/[id]/+page.server.ts"
+	],
+	"/[...path]": [
+		"src/routes/[...path]/+server.ts"
+	]
+}

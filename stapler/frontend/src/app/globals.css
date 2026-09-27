@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050508;
+  --foreground: #f8fafc;
+}
+
+.dark {
+  --background: #050508;
+  --foreground: #f8fafc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Premium scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+/* Prose dark mode overrides */
+.prose-invert {
+  --tw-prose-body: theme(colors.slate.300);
+  --tw-prose-headings: theme(colors.slate.100);
+  --tw-prose-bold: theme(colors.slate.200);
+  --tw-prose-links: theme(colors.indigo.400);
+  --tw-prose-code: theme(colors.pink.300);
+  --tw-prose-quotes: theme(colors.slate.300);
+  --tw-prose-pre-bg: rgb(15 23 42 / 0.8);
+}
+
+/* Smooth focus rings */
+:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
+}
+
+/* Selection highlight */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: rgba(199, 210, 254, 1);
+}
+
+/* Tab panel animation */
+[data-state="active"][data-slot="tabs-trigger"] {
+  transition: all 0.2s ease;
+}

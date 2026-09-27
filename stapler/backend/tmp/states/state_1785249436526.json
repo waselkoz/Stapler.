@@ -1,0 +1,48 @@
+{
+  "id": "state_1785249436526",
+  "url": "https://jobsphere-lwkm.onrender.com",
+  "idea": "",
+  "domain": "",
+  "created_at": 1785249436.5264454,
+  "updated_at": 1785249608.0115252,
+  "status": "started",
+  "current_step": "developer",
+  "branding": {
+    "done": true,
+    "colors": [],
+    "tone": "",
+    "fonts": [],
+    "personality": ""
+  },
+  "strategy": {
+    "done": true,
+    "summary": "## Business Overview\nThe business is selling a platform for building and deploying applications, focusing on ease of use, scalability, and reliability. The ideal customer is a developer or a business looking to streamline their application development process. The business sits in a competitive market, with key players like AWS, Google Cloud, and Microsoft Azure, but Render's focus on simplicity and ease of use sets it apart.\n\n## SWOT Analysis\n### Strengths\n- **Simplified Deployment Process**: R",
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": []
+  },
+  "design": {
+    "done": true,
+    "philosophy": "",
+    "color_system": {},
+    "typography": {}
+  },
+  "developer": {
+    "done": true,
+    "pages": [],
+    "code_length": 16950
+  },
+  "qa": {
+    "done": false,
+    "score": null,
+    "issues": [],
+    "approved": false
+  },
+  "tool_data": {
+    "colors_count": 0,
+    "ctas_count": 0,
+    "accessibility_score": null
+  },
+  "errors": [],
+  "timing": {}
+}

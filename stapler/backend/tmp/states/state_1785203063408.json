@@ -1,0 +1,48 @@
+{
+  "id": "state_1785203063408",
+  "url": "https://tailchat-sigma.vercel.app/",
+  "idea": "",
+  "domain": "",
+  "created_at": 1785203063.408443,
+  "updated_at": 1785203196.8643112,
+  "status": "started",
+  "current_step": "charts",
+  "branding": {
+    "done": true,
+    "colors": [],
+    "tone": "",
+    "fonts": [],
+    "personality": ""
+  },
+  "strategy": {
+    "done": true,
+    "summary": "# Tailchat Website Analysis\n\n## Business Overview\nTailchat is selling a seamless and focused communication experience tailored specifically for professional teams. It aims to foster productivity, enhance collaboration, and create a sense of belonging in digital workspaces. The ideal customer is likely a tech-savvy team leader or project manager, working in a modern, agile environment, who values efficiency and security in communication tools. Tailchat positions itself in the competitive landscap",
+    "strengths": [],
+    "weaknesses": [],
+    "opportunities": []
+  },
+  "design": {
+    "done": true,
+    "philosophy": "",
+    "color_system": {},
+    "typography": {}
+  },
+  "developer": {
+    "done": false,
+    "pages": [],
+    "code_length": 0
+  },
+  "qa": {
+    "done": false,
+    "score": null,
+    "issues": [],
+    "approved": false
+  },
+  "tool_data": {
+    "colors_count": 0,
+    "ctas_count": 0,
+    "accessibility_score": null
+  },
+  "errors": [],
+  "timing": {}
+}
