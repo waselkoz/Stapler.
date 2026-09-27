@@ -87,6 +87,8 @@ export function useStapler() {
     }
   };
 
+  const forceGenerate = () => submitIdeaOrReply("FORCE_GENERATE", true);
+
   // Keep startAnalysis for backwards compatibility in UI, but it now routes to the new function
   const startAnalysis = (idea: string) => submitIdeaOrReply(idea, false);
 
@@ -99,5 +101,6 @@ export function useStapler() {
     grillMessage,
     submitIdeaOrReply,
     startAnalysis,
+    forceGenerate,
   };
 }

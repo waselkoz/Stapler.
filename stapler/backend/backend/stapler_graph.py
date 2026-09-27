@@ -64,15 +64,17 @@ class StaplerState(TypedDict):
 from langchain_openai import ChatOpenAI
 
 # Use Ollama via OpenAI compatible endpoint
-OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://global.prd.ga.run.brev.nvidia.com:44205/v1")
+OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "https://11434-8vc6ljf6f.gobrev.dev/v1")
 
 # Heavy LLM: For complex reasoning and flawless code generation (NVIDIA Nemotron via Ollama)
 heavy_llm = ChatOpenAI(
-    model_name="my_custom_model",
+    model_name="nemotron",
     temperature=0.2,
     max_tokens=8000,
     base_url=OLLAMA_URL,
-    api_key="ollama" # placeholder required for openai client
+    api_key="ollama", # placeholder required for openai client
+    timeout=300,
+    max_retries=3
 )
 
 # Vision LLM: Specifically for reading the screenshots (Llama 3.2 Vision via Ollama)
@@ -80,7 +82,9 @@ vision_llm = ChatOpenAI(
     model_name="llama3.2-vision",
     temperature=0.2,
     base_url=OLLAMA_URL,
-    api_key="ollama"
+    api_key="ollama",
+    timeout=300,
+    max_retries=3
 )
 
 # Light LLM: For creative writing, roasting, and fast text generation (Llama 3.1 8B via Ollama)
@@ -88,7 +92,9 @@ light_llm = ChatOpenAI(
     model_name="llama3.1",
     temperature=0.8,
     base_url=OLLAMA_URL,
-    api_key="ollama"
+    api_key="ollama",
+    timeout=300,
+    max_retries=3
 )
 
 # Nodes
@@ -101,27 +107,33 @@ def run_interviewer(state: StaplerState):
     if state.get("is_grill_satisfied"):
         return state
 
+    if state.get("messages") and state["messages"][-1].content.strip() == "FORCE_GENERATE":
+        return {"is_grill_satisfied": True}
+
     market_context = ""
 
     sys_prompt = (
-        "You are an analytical and honest business partner helping the user refine their product/service idea.\n"
-        "Your goal is to politely interrogate them until you understand exactly what they want to build or sell.\n\n"
+        "You are a brutally honest, highly critical venture capitalist and business partner.\n"
+        "Your goal is to ARGUE with the user's idea, challenge their assumptions, and provide specific PROS and CONS for their concept before moving forward.\n\n"
         "INSTRUCTIONS:\n"
         "1. Write out your response naturally in Markdown.\n"
-        "2. Ask 1-2 clarifying questions to narrow down their niche, target market, or budget.\n"
-        "3. You MUST suggest 2-3 specific popular products/models as examples with estimated prices.\n"
-        "4. If Reference Images are provided below, use those URLs exactly. If not, you MUST use REAL photos from the internet using: `![Product](https://loremflickr.com/320/240/{keyword})` where keyword is a single word like 'laptop' or 'dress'. DO NOT use pollinations or AI generation.\n"
-        "5. If the user has provided enough solid details (exact niche, region, budget) and you are ready to proceed, append the exact text `<CONFIRMED>` to the very end of your response.\n\n"
+        "2. Start by giving 2 PROS and 2 CONS of their specific idea. Be realistic and critical.\n"
+        "3. Ask 1-2 difficult, challenging questions to test if they have actually thought this through (e.g., budget, competition, logistics).\n"
+        "4. You MUST suggest 2-3 specific popular products/models as examples with estimated prices.\n"
+        "5. You MUST use REAL photos from the internet to illustrate your examples. Construct the URL like this: `![Product Name](https://loremflickr.com/320/240/keyword1,keyword2)` CRITICAL: Do NOT forget the `(url)` part of the markdown tag!\n"
+        "6. If the user has survived your grilling and provided solid defenses (exact niche, region, budget), append the exact text `<CONFIRMED>` to the very end of your response.\n\n"
         "EXAMPLE OUTPUT:\n"
-        "That's an exciting idea! Selling hardware is a huge market. To give you the best strategy, I need to know a bit more about your focus.\n\n"
-        "**Here are some popular options to consider:**\n"
+        "So you want to sell hardware. Let's be real—this is a brutal, low-margin industry.\n\n"
+        "**PROS:** High demand, evergreen market, clear upgrade cycles.\n"
+        "**CONS:** Massive supply chain risk, terrible profit margins, giants like Amazon will crush you on shipping.\n\n"
+        "**Here is what you're competing against:**\n"
         "- **NVIDIA RTX 4090** (Est. $1,599) - High-end gaming market.\n"
         "  ![NVIDIA RTX 4090](https://loremflickr.com/320/240/gpu)\n"
         "- **Intel Core i9-14900K** (Est. $589) - Premium workstation builds.\n"
         "  ![Intel Core i9](https://loremflickr.com/320/240/cpu)\n\n"
-        "**To help us get started:**\n"
-        "1. Are you targeting budget gamers, or high-end professionals?\n"
-        "2. Do you plan to sell globally online, or in a specific region?\n\n"
+        "**My Questions for You:**\n"
+        "1. How are you going to acquire customers cheaper than established retailers?\n"
+        "2. What is your actual starting budget for inventory?\n\n"
         f"--- MARKET DATA & REFERENCE IMAGES ---\n{market_context}\n--------------------------------------\n"
     )
     
@@ -135,6 +147,11 @@ def run_interviewer(state: StaplerState):
         res = heavy_llm.invoke(messages)
         full_response = res.content
         is_satisfied = "<CONFIRMED>" in full_response
+        
+        # Force the AI to argue at least once!
+        if not state.get("messages"):
+            is_satisfied = False
+            
         clean_response = full_response.replace("<CONFIRMED>", "").strip()
         
         new_msgs = state.get("messages", []) + [AIMessage(content=clean_response)]
@@ -160,32 +177,15 @@ def human_input(state: StaplerState):
     new_msgs = state.get("messages", []) + [HumanMessage(content=user_reply)]
     return {"messages": new_msgs}
 def run_auditor(state: StaplerState):
-    # 1. Live Reddit Sentiment & Competitor Deep-Dive via DDGS
+    # Skip live DDGS search to prevent 403 Ratelimit hanging
     reddit_sentiment = ""
     competitors = ""
-    try:
-        ddgs = DDGS()
-        clean_idea = state['input_idea'].split("Content Context")[0].strip()[:50]
-        
-        # Competitor Search
-        comp_query = f"top alternatives to {clean_idea}" if "http" in clean_idea else f"competitors in {clean_idea} market"
-        comp_results = ddgs.text(comp_query, max_results=2)
-        if comp_results:
-            competitors = "\nCompetitor Intel:\n" + "\n".join([f"- {r['title']}: {r['body']}" for r in comp_results])
-            
-        # Reddit Sentiment Search
-        reddit_query = f"site:reddit.com {clean_idea} (complaints OR sucks OR pain points OR problem)"
-        reddit_results = ddgs.text(reddit_query, max_results=3)
-        if reddit_results:
-            reddit_sentiment = "\nReddit Sentiment (Real Customer Complaints):\n" + "\n".join([f"- {r['body']}" for r in reddit_results])
-    except Exception as e:
-        print("DDGS Error during Auditor pre-flight:", e)
 
     # RAG INJECTION: Gold Standard & Mem0 Memory
     gold_standard = get_relevant_gold_standard(state['input_idea'])
     agent_memory = get_past_context()
 
-    sys_prompt = "You are the Auditor, a brutal, anti-sycophantic business and UX reviewer. Your job is to DESTROY bad ideas and terrible UI/UX using REAL market data and competitor intel. Do not be polite. Identify 3 critical conversion-killing flaws.\n\nGOLD STANDARD EXAMPLE OF A ROAST (Do not copy, but match this tone):\n{gold_standard}\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}"
+    sys_prompt = "You are the Auditor, a brutal, anti-sycophantic business and UX reviewer. Your job is to DESTROY bad ideas and terrible UI/UX using REAL market data and competitor intel. Do not be polite. Identify 3 critical conversion-killing flaws.\n\nGOLD STANDARD EXAMPLE OF A ROAST (Do not copy, but match this tone):\n{gold_standard}\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}\nDO NOT add comments, explanations, or any text inside or outside the JSON block. No markdown formatting. Just the raw JSON object."
     context_str = f"Business Context:\n{state['input_idea']}\n{competitors}\n{reddit_sentiment}\n{agent_memory}"
     
     from langchain_core.output_parsers import JsonOutputParser
@@ -216,14 +216,16 @@ def run_auditor(state: StaplerState):
         res = chain.invoke({"context": context_str, "gold_standard": gold_standard, "format_instructions": parser.get_format_instructions()})
         return {"audit": AuditOutput(**res) if isinstance(res, dict) else res}
     except Exception as e:
-        return {"error": f"Auditor failed: {str(e)}"}
+        print(f"Auditor warning: {e}")
+        fallback = AuditOutput(roast_points=[f"Parse Error: {str(e)}", "Please try a slightly different prompt."], ui_ux_fixes="Backend parse error. Refresh and try again.")
+        return {"audit": fallback}
 
 def run_strategist(state: StaplerState):
     if state.get("error"): return state
     from langchain_core.output_parsers import JsonOutputParser
     parser = JsonOutputParser(pydantic_object=MarketingEngineOutput)
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the Growth Strategist. Based on the auditor's roast, generate a highly-targeted audience matrix, actionable marketing funnel, a specific pivot strategy, and realistic before/after projected metrics for a chart.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}"),
+        ("system", "You are the Growth Strategist. Based on the auditor's roast, generate a highly-targeted audience matrix, actionable marketing funnel, a specific pivot strategy, and realistic before/after projected metrics for a chart.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}\nDO NOT add comments, explanations, or any text inside or outside the JSON block. No markdown formatting. Just the raw JSON object."),
         ("human", "Auditor Roast:\n{roast}")
     ])
     try:
@@ -232,14 +234,16 @@ def run_strategist(state: StaplerState):
         res = chain.invoke({"roast": audit_json, "format_instructions": parser.get_format_instructions()})
         return {"marketing_engine": MarketingEngineOutput(**res) if isinstance(res, dict) else res}
     except Exception as e:
-        return {"error": f"Strategist failed: {str(e)}"}
+        print(f"Strategist warning: {e}")
+        fallback = MarketingEngineOutput(target_audience="Error Parsing", funnel_steps=["Error"], pivot_strategy=str(e), metrics_data=[])
+        return {"marketing_engine": fallback}
 
 def run_brand_architect(state: StaplerState):
     if state.get("error"): return state
     from langchain_core.output_parsers import JsonOutputParser
     parser = JsonOutputParser(pydantic_object=BrandArchitectOutput)
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the Brand Architect. Your job is to invent a highly-converting, psychologically manipulative visual identity for this brand that matches the exact audience the Strategist defined.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}"),
+        ("system", "You are the Brand Architect. Your job is to invent a highly-converting, psychologically manipulative visual identity for this brand that matches the exact audience the Strategist defined.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}\nDO NOT add comments, explanations, or any text inside or outside the JSON block. No markdown formatting. Just the raw JSON object."),
         ("human", "Strategist Output:\n{strategy}")
     ])
     try:
@@ -248,14 +252,16 @@ def run_brand_architect(state: StaplerState):
         res = chain.invoke({"strategy": strat_json, "format_instructions": parser.get_format_instructions()})
         return {"visual_identity": BrandArchitectOutput(**res) if isinstance(res, dict) else res}
     except Exception as e:
-        return {"error": f"Brand Architect failed: {str(e)}"}
+        print(f"Brand Architect warning: {e}")
+        fallback = BrandArchitectOutput(typography_pairing="Parse Error", moodboard_vibe=str(e), photography_style="Error")
+        return {"visual_identity": fallback}
 
 def run_media_buyer(state: StaplerState):
     if state.get("error"): return state
     from langchain_core.output_parsers import JsonOutputParser
     parser = JsonOutputParser(pydantic_object=AdCreativeOutput)
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the Media Buyer. Generate TikTok/FB ad hooks and highly specific search query strings for video references based on the marketing funnel. Example search queries: 'aesthetic founder POV packing orders', 'brutal honesty skincare review'.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}"),
+        ("system", "You are the Media Buyer. Generate TikTok/FB ad hooks and highly specific search query strings for video references based on the marketing funnel. Example search queries: 'aesthetic founder POV packing orders', 'brutal honesty skincare review'.\n\nCRITICAL: You MUST output ONLY valid JSON matching this schema:\n{format_instructions}\nDO NOT add comments, explanations, or any text inside or outside the JSON block. No markdown formatting. Just the raw JSON object."),
         ("human", "Marketing Engine:\n{marketing}")
     ])
     try:
@@ -264,21 +270,12 @@ def run_media_buyer(state: StaplerState):
         res = chain.invoke({"marketing": strat_json, "format_instructions": parser.get_format_instructions()})
         ad_obj = AdCreativeOutput(**res) if isinstance(res, dict) else res
         
-        # LIVE SEARCH: Replace hallucinated URLs with real TikTok URLs using DDGS
-        try:
-            ddgs = DDGS()
-            for ref in ad_obj.video_references:
-                if "tiktok" in ref.platform.lower():
-                    search_results = ddgs.text(f"site:tiktok.com inurl:video {ref.search_query}", max_results=1)
-                    if search_results:
-                        ref.example_url = search_results[0]['href']
-        except Exception as e:
-            print(f"DDGS Search failed for video references: {e}")
-            pass
-        
+        # Removed LIVE SEARCH to prevent DDGS hanging
         return {"ad_creative": ad_obj}
     except Exception as e:
-        return {"error": f"Media Buyer failed: {str(e)}"}
+        print(f"Media Buyer warning: {e}")
+        fallback = AdCreativeOutput(hooks=[f"Error: {str(e)}"], video_references=[])
+        return {"ad_creative": fallback}
 
 def run_ui_engineer(state: StaplerState):
     if state.get("error"): return state
@@ -302,7 +299,7 @@ def run_ui_engineer(state: StaplerState):
     brand_identity_json = brand_identity.model_dump_json() if hasattr(brand_identity, "model_dump_json") else str(brand_identity)
     
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the UI Engineer. Write a complete React component using Tailwind CSS to fix the identified UI/UX flaws. The code must be raw text inside a ```tsx ... ``` markdown block. Do not use JSON. Just write the code.\n\nUse these high-converting blocks as reference:\n{component_library}\n\nCRITICAL DESIGN RULES (DESIGN.md):\n{design_md}\n" + brand_context),
+        ("system", "You are the UI Engineer. Write a complete React component using Tailwind CSS to fix the identified UI/UX flaws. The code must be raw text inside a ```tsx ... ``` markdown block. Do not use JSON. Just write the code.\n\nUse these high-converting blocks as reference:\n{component_library}\n\nCRITICAL DESIGN RULES (DESIGN.md):\n{design_md}\n" + brand_context + "\n\nCRITICAL IMAGE RULE: YOU MUST NOT USE PLACEHOLDERS. YOU MUST USE REAL PHOTOS FROM THE INTERNET. Use 'https://loremflickr.com/800/600/YOUR_KEYWORD' as the src for all images so they populate with real photography."),
         ("human", "Audit Fixes to Implement:\n{fixes}\n{feedback_prompt}")
     ])
     try:

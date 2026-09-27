@@ -1195,17 +1195,24 @@ async def run_stapler(req: StapleRequest):
             
     # Check if interrupted for human input
     state = stapler_graph.get_state(config)
+    print(f"\n--- GRAPH EXECUTION COMPLETED ---")
+    print(f"State Next: {state.next}")
+    print(f"State Keys: {list(state.values.keys()) if state.values else []}")
+    
     if state.next:
         tasks = state.tasks
         interrupt_msg = "Please provide more details."
         if tasks and tasks[0].interrupts:
             interrupt_msg = tasks[0].interrupts[0].value
+        print(f"Returning Interrupted: {interrupt_msg[:50]}...")
         return {"status": "interrupted", "message": interrupt_msg, "thread_id": req.thread_id}
 
     # If error
     if result and result.get("error"):
+        print(f"Raising 500 Error: {result['error']}")
         raise HTTPException(500, result["error"])
         
+    print(f"Returning Completed. Audit present: {'audit' in result}")
     # Final return (graph completed)
     from backend.skills import generate_tts_audio
     audio_b64 = None
